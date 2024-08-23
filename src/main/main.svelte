@@ -59,6 +59,34 @@
         }
         
     }
+    let numbers = [];
+
+    // SSE 연결을 시작하는 함수
+    async function startSSE() {
+        const eventSource = new EventSource('http://127.0.0.1:5000/inference/progress');
+        
+        eventSource.onmessage = function(event) {
+            const data = event.data;
+            numbers = [...numbers, data]; // 새로 받은 데이터를 numbers 배열에 추가            
+            // progressValue = data*3;            
+        };
+
+        eventSource.onerror = function() {
+            console.error('SSE 연결 중 오류 발생.');
+            eventSource.close(); // 오류가 발생하면 연결을 종료
+        };
+    }
+
+    async function handleStartProgress(){
+        let url = `${apiUrl}/inference/progress`;
+        console.log("started");
+        const req = new Request(url,{
+            method: 'GET',
+        });
+        const response = await fetch(req);
+        console.log(response.data);
+        
+    }
 
     async function handleStartSearch() {
         processing = true; // 처리 중 상태로 변경
@@ -100,7 +128,19 @@
 <HeroBanner />
 
 <div class="container">
-   
+    <div id = "progressbar">        
+        <ProgressBar series={progressValue} />
+    </div>
+    <button on:click = {startSSE}>sse 호출</button>
+
+    <h1>스트리밍 숫자</h1>
+    <ul>
+        {#each numbers as number}
+            <li>{number}</li>
+
+        {/each}
+    </ul>
+
     <div class="select-Local">
         <p>{strAsset.selectLocal}</p>
         <input id="locationUpload" bind:value={location} placeholder="장전동" >
