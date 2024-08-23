@@ -5,7 +5,7 @@
     import { Progressbar } from 'flowbite-svelte';
     import ProgressBar from '../general/ProgressBar.svelte';
 
-    let progressValue = 95;
+    let progressValue = 50;
     let location;
     let queryString = '';
     let scoreThreshold = 0.005;
@@ -16,6 +16,29 @@
     let completed = false; // 상태 변수 추가
     let isNotReadyForSearch = false;
     let resultFileUrl = ''; // 결과 파일 URL
+
+
+
+    const incr = () => (progressValue += 1)
+
+ 
+    let clear
+    $: if(processing) {
+        clearInterval(clear)
+        clear = setInterval(updateProccessValue, 1000)          
+    }
+    async function startProcessing(){
+        processing = true;
+    }
+    async function stopProcessing(){
+        processing = false;        
+        clearInterval(clear);
+        clear = 0;
+    }
+
+    async function updateProccessValue(){     
+        progressValue+=1;               
+    }
 
     async function handleAddQuery(queryString) {
         let url = `${apiUrl}/query`;
@@ -55,6 +78,11 @@
         processing = false; // 처리 중 상태 해제
         completed = true; // 완료 상태로 변경
     }
+
+    async function getProgressValue(){
+        
+    }
+
     
 
     const strAsset = {
@@ -72,10 +100,7 @@
 <HeroBanner />
 
 <div class="container">
-    <div id = "progressbar">        
-        <ProgressBar series={progressValue} />
-    </div>
-
+   
     <div class="select-Local">
         <p>{strAsset.selectLocal}</p>
         <input id="locationUpload" bind:value={location} placeholder="장전동" >
@@ -100,12 +125,17 @@
         </Tooltip>
         <input id="frameInterval" type="range" min="3" max="6" step="1" bind:value={frameInterval} />
         <span>{frameInterval}</span>
-        <Progressbar progress=50 size="h-1.5" />
+        
+        <button on:click={()=> startProcessing()}>progress 시작</button>
+        <button on:click={()=> stopProcessing()}>progress 중단</button>        
+        
+        <div id = "progressbar">        
+            <ProgressBar series={progressValue} />
+        </div>
     
         {#if processing}
-            <button disabled>처리 중...</button>
-            <Progressbar progress="50" />
-            <p>안녕</p>
+            <button disabled>처리 중...</button>        
+            
         {:else if completed}
             <button on:click={handleStartSearch}>{strAsset.startSearch}</button>
             <p>탐색 완료!</p>
@@ -176,6 +206,10 @@
         display: block;
         width: 100%;
         margin-top: 10px;
+    }
+    button[id="searchStart"]{
+        padding: 10px 20px;
+        margin-top: 20px;
     }
 
     label {
